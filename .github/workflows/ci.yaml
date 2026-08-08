@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'           # запускать на пуш в любую ветку
+  pull_request:
+    branches:
+      - main           # запускать на PR в main
+
+jobs:
+  analyze-and-test:
+    name: Analyze & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Чекаутим код
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Устанавливаем Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.9'  
+          channel: 'stable'
+          cache: true                 # кеширует пакеты между запусками
+
+      # 3. Получаем зависимости
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 4. Проверяем форматирование
+      - name: Check code formatting
+        run: dart format --set-exit-if-changed lib/ test/ example/
+
+      # 5. Статический анализ
+      - name: Run static analysis
+        run: flutter analyze --no-fatal-infos
+
+      # 6. Запускаем тесты
+      - name: Run tests
+        run: flutter test --coverage
+
+      # 7. (Опционально) Публикуем отчёт о покрытии
+      # Раскомментируй, если хочешь видеть процент покрытия в PR
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v4
+      #   with:
+      #     file: coverage/lcov.info
+      #     token: ${{ secrets.CODECOV_TOKEN }}
